@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# List every git repo in ~/Work with its state. Enter opens lazygit in the repo.
+root=${PROJECTS_DIR:-$HOME/Work}
+
+row() {
+  local d=$1 ab
+  ab=$(git -C "$d" rev-list --left-right --count '@{u}...HEAD' 2>/dev/null | awk '{print "↓"$1" ↑"$2}')
+  printf '%s\t%s\t%-22s %-12s %3s dirty  %-9s %s\n' \
+    "$(git -C "$d" log -1 --format=%ct 2>/dev/null || echo 0)" \
+    "$(basename "$d")" \
+    "$(basename "$d")" \
+    "$(git -C "$d" branch --show-current)" \
+    "$(git -C "$d" status --porcelain | wc -l)" \
+    "${ab:-no-remote}" \
+    "$(git -C "$d" log -1 --format=%cr 2>/dev/null)"
+}
+
+for d in "$root"/*/; do
+  [ -d "$d/.git" ] && row "${d%/}"
+done | sort -rn |
+  fzf --delimiter '\t' --with-nth 3 --no-sort --reverse \
+      --header 'enter: lazygit | ctrl-t: terminal here | newest first' \
+      --preview "git -C $root/{2} status -sb; echo; git -C $root/{2} log --oneline -8" \
+      --bind "enter:execute(cd $root/{2} && lazygit)" \
+      --bind "ctrl-t:execute(cd $root/{2} && setsid xdg-terminal-exec >/dev/null 2>&1 &)"
