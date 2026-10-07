@@ -35,7 +35,7 @@ row() {
 }
 
 for d in "$root"/*/; do
-  [ -d "$d/.git" ] && row "${d%/}"
+  [ -e "$d/.git" ] && row "${d%/}"
 done | sort -rn |
   fzf --delimiter '\t' --with-nth 3 --no-sort --reverse \
       --header 'enter: lazygit | ctrl-t: terminal here | newest first' \
