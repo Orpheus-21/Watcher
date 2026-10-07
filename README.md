@@ -59,7 +59,7 @@ Keys:
 | `Ctrl-T` | Open a new terminal in the selected repo. |
 | `Esc` | Close Watcher. |
 
-Watcher lists only the direct subfolders of the parent folder. It does not list a folder where `.git` is a file, for example a linked worktree.
+Watcher lists only the direct subfolders of the parent folder. It lists a linked worktree and a submodule in the same way as a normal repo.
 
 ### Herdr mode
 
