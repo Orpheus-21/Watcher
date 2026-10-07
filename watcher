@@ -2,6 +2,25 @@
 # List every git repo in ~/Work with its state. Enter opens lazygit in the repo.
 export root=${PROJECTS_DIR:-$HOME/Work}
 
+# watcher --herdr: list the Herdr workspaces instead. Enter focuses one.
+if [ "${1:-}" = --herdr ]; then
+  jq -rn --argjson w "$(herdr workspace list)" --argjson a "$(herdr agent list)" '
+    def pad($n): (. + "                                        ")[:$n];
+    ($a.result.agents | map({key: .workspace_id, value: .}) | from_entries) as $g
+    | $w.result.workspaces[]
+    | ($g[.workspace_id] // {}) as $x
+    | [ ({"blocked":0,"done":1,"unknown":2,"working":3,"idle":4}[.agent_status] // 5),
+        .workspace_id,
+        ($x.pane_id // "-"),
+        "\(.agent_status | pad(8)) \(.label | pad(34)) \($x.terminal_title_stripped // "")" ]
+    | @tsv' | sort -s -t$'\t' -k1,1n |
+    fzf --delimiter '\t' --with-nth 4 --no-sort --reverse \
+        --header 'enter: focus workspace | order: blocked, done, unknown, working, idle' \
+        --preview '[ {3} != - ] && herdr agent read {3} --source recent-unwrapped --lines 30' \
+        --bind 'enter:execute-silent(herdr workspace focus {2})+abort'
+  exit
+fi
+
 row() {
   local d=$1 ab
   ab=$(git -C "$d" rev-list --left-right --count '@{u}...HEAD' 2>/dev/null | awk '{print "↓"$1" ↑"$2}')
