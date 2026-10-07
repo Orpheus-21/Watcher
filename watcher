@@ -2,8 +2,16 @@
 # List every git repo in ~/Work with its state. Enter opens lazygit in the repo.
 export root=${PROJECTS_DIR:-$HOME/Work}
 
+# Stop with one clear line when a program is missing.
+need() {
+  for p in "$@"; do
+    command -v "$p" >/dev/null || { echo "watcher: $p is not installed" >&2; exit 1; }
+  done
+}
+
 # watcher --herdr: list the Herdr workspaces instead. Enter focuses one.
 if [ "${1:-}" = --herdr ]; then
+  need fzf jq herdr
   jq -rn --argjson w "$(herdr workspace list)" --argjson a "$(herdr agent list)" '
     def pad($n): (. + "                                        ")[:$n];
     ($a.result.agents | map({key: .workspace_id, value: .}) | from_entries) as $g
@@ -34,6 +42,7 @@ row() {
     "$(git -C "$d" log -1 --format=%cr 2>/dev/null)"
 }
 
+need fzf git
 for d in "$root"/*/; do
   [ -e "$d/.git" ] && row "${d%/}"
 done | sort -rn |
