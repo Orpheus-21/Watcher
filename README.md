@@ -1,6 +1,6 @@
 # Watcher
 
-Watcher shows the state of every git repo in one folder on one screen.
+Watcher shows the state of every git repo in one folder on one screen. It can also list the workspaces of Herdr.
 
 ## What it does
 
@@ -23,6 +23,7 @@ You can select a line to see `git status -sb` and the last 8 commits. You can al
 - `fzf`.
 - `lazygit`, for the `Enter` key.
 - `xdg-terminal-exec`, for the `Ctrl-T` key.
+- `jq` and `herdr`, for the `--herdr` mode.
 
 ## Install
 
@@ -60,6 +61,20 @@ Keys:
 
 Watcher lists only the direct subfolders of the parent folder. It does not list a folder where `.git` is a file, for example a linked worktree.
 
+### Herdr mode
+
+Run Watcher with the option `--herdr`:
+
+```
+watcher --herdr
+```
+
+This mode lists the workspaces of the running Herdr server. It does not read git repos. Each line shows the status of the agent, the workspace label, and the title of the agent chat.
+
+The list has this order: `blocked`, `done`, `unknown`, `working`, and `idle`. A workspace that needs your input is at the top.
+
+The preview shows the last 30 lines of the agent screen. `Enter` runs `herdr workspace focus` for the selected workspace and closes Watcher. `Esc` closes Watcher. The key `Ctrl-T` is not bound in this mode.
+
 ## Configuration
 
 | Setting | Default | Effect |
@@ -77,6 +92,8 @@ The script calls `row` for each subfolder that holds a `.git` directory. The com
 The script sends the sorted lines to `fzf`. The option `--with-nth 3` shows only the third field. The placeholder `{2}` is the folder name. The preview and the two key bindings use `{2}` to find the repo folder.
 
 The `Ctrl-T` binding starts `xdg-terminal-exec` in the background with `setsid`, in the folder of the selected repo.
+
+In the Herdr mode, `jq` joins the output of `herdr workspace list` and `herdr agent list` by the workspace ID. It prints one line for each workspace. The line has four fields, separated by tabs: the sort rank of the status, the workspace ID, the pane ID, and the text to show. A workspace with no agent has `-` as the pane ID, and the preview stays empty. The script sorts the lines by the first field and sends them to `fzf`.
 
 ## License
 
